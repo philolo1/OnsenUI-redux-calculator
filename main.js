@@ -53,6 +53,23 @@ function handleOperation(state, action) {
   });
 }
 
+function handleEqual(state, action) {
+  if (state.lastAction !== 'EQUAL') {
+    var myFun = function myFun(a) {
+      return state.operation(a, state.number);
+    };
+
+    return _extends({}, state, {
+      storedFunc: myFun,
+      number: state.storedFunc(state.number)
+    });
+  } else {
+    return _extends({}, state, {
+      number: state.storedFunc(state.number)
+    });
+  }
+}
+
 function help(state, action) {
 
   var initialState = {
@@ -88,20 +105,7 @@ function help(state, action) {
     case "OPERATION":
       return handleOperation(state, action);
     case "EQUAL":
-      if (state.lastAction !== 'EQUAL') {
-        var myFun = function myFun(a) {
-          return state.operation(a, state.number);
-        };
-
-        return _extends({}, state, {
-          storedFunc: myFun,
-          number: state.storedFunc(state.number)
-        });
-      } else {
-        return _extends({}, state, {
-          number: state.storedFunc(state.number)
-        });
-      }
+      return handleEqual(state, action);
 
     default:
       return state;
@@ -126,30 +130,40 @@ store.subscribe(render);
 ons.ready(render);
 
 var type = function type(number) {
-  store.dispatch({ type: 'TYPE', number: number });
+  return store.dispatch({ type: 'TYPE', number: number });
 };
 
-var clean = function clean(number) {
-  store.dispatch({ type: 'CLEAN' });
+var clean = function clean() {
+  return store.dispatch({ type: 'CLEAN' });
 };
 
 var changeSign = function changeSign() {
   return store.dispatch({ type: 'CHANGE_SIGN' });
 };
 var mod = function mod() {
-  return store.dispatch({ type: 'OPERATION', func: mod_func });
+  return store.dispatch({ type: 'OPERATION', func: function func(a, b) {
+      return a % b;
+    } });
 };
 var divide = function divide() {
-  return store.dispatch({ type: 'OPERATION', func: div_func });
+  return store.dispatch({ type: 'OPERATION', func: function func(a, b) {
+      return Math.floor(a / b);
+    } });
 };
 var plus = function plus() {
-  return store.dispatch({ type: 'OPERATION', func: plus_func });
+  return store.dispatch({ type: 'OPERATION', func: function func(a, b) {
+      return a + b;
+    } });
 };
 var minus = function minus() {
-  return store.dispatch({ type: 'OPERATION', func: minus_func });
+  return store.dispatch({ type: 'OPERATION', func: function func(a, b) {
+      return a - b;
+    } });
 };
 var multiply = function multiply() {
-  return store.dispatch({ type: 'OPERATION', func: mult_func });
+  return store.dispatch({ type: 'OPERATION', func: function func(a, b) {
+      return a * b;
+    } });
 };
 var equal = function equal() {
   return store.dispatch({ type: 'EQUAL', func: function func(a, b) {

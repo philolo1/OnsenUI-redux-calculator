@@ -1,3 +1,159 @@
-There are many frameworks and concepts around in the Javascript world. In todays blogpost we are going to write a pure mobile Javascript application with OnsenUI and  `Redux`, which is a very powerful but small library that enables to write Javascript applications in a conceptual different way.
+There are many frameworks and concepts around in the Javascript world. In todays blogpost we are going to write a pure mobile Javascript application with OnsenUI and  `Redux`, which is a very small but powerful library that enables to write Javascript applications in a conceptual different way.
 
-Redux is inspired by Flux (https://facebook.github.io/flux/), whcih was developed by Facebook. 
+Redux is inspired by Flux (https://facebook.github.io/flux/), which  was developed by Facebook. Unlike Flux,  Redux is quite flexible and does not require any specific infrastructure like GraphQL, which is required by Flux.  We will use Redux in Combination with OnsenUI to build a simple integer Calculator App. One of the nice things about this app is that it will look both on android and ios due to the Autostyle.
+
+
+
+Lets first understand what Redux is and how it works. Redux consists of three main components work. super 
+
+* Store: This stores the complete state of our application. Given the content of the store, we should be able to save and recover the current state of the application.
+* Actions: Actions are how the application interacts with the store. The application sends an action with data and then the actinos and datas are handled by a so called reducer.
+* Reducer:  The Reducer is a function that takes the current state and an action and tranforms it to a new State.
+
+In addition to these three components, there are three principles(https://github.com/reactjs/redux/blob/master/docs/introduction/ThreePrinciples.md) of how the application should interact with it. 
+
+1. Single Source of Truth, the store: As mentioned previously the store is the only place where data is stored. This enables us the application to do nice things like undoing an action and also helps to more easily debug.
+2. State is read-only: The state of the application can only be changed via actions. This is very useful for debugging, since a state change can be easily looked at.
+3. The reducer consists only of pure functions: Pure functions are functions, that do not change their parameter. Lets look at an example: Let's imagine our state is an object and we want to write a pure function called `handleLoaded` that should add the property `isLoaded : true` to the state:
+
+``
+`
+function handleLoadedSimple: (state, action) {
+  // this is not pure, since it manipulates the original project
+  state.isLoaded = true;
+  return state;
+}
+
+function handleLoadedPure: (state, action) {
+  return {...state, isLoaded: true};
+}
+```
+
+As one can see, one needs to be careful to write pure functions and don't manipulate the paramaters. If the function would be  not pure, it would be hard to recover to previous state and would make debuggin a pain. 
+
+
+EXPLAIN redux https://github.com/reactjs/redux/blob/master/examples/counter-vanilla/index.html
+
+
+store = Redux.createStore(counter)
+var valueEl = document.getElementById('value')
+function render() {
+  valueEl.innerHTML = store.getState().toString()
+}
+render()
+store.subscribe(render)
+
+
+CALCULATOR
+
+Let us first look at our html/css structure. The caluclator consists of 6 rows: The first one will be a simple div that contains the screen and the rest of the buttons are consistens of buttons for inputing numbers and actions. 
+
+
+
+
+HTML JUST BUTTONS
+
+```
+<ons-page>
+    <ons-row style="height: 20%">
+      <div id="screen" class="screen" > </div>
+    </ons-row>
+    <ons-row style="height:80%">
+      <ons-row style=" height: 20%">
+        <ons-button  onclick="clean()" class="actionButton" > C </ons-button> 
+        <ons-button  onclick="changeSign()" class="actionButton"> ± </ons-button> 
+        <ons-button  onclick="mod()" class="actionButton"> % </ons-button>       
+        <ons-button  onclick="divide()" class="actionButton"> ÷ </ons-button>     
+      </ons-row>
+      <ons-row style=" height: 20%">
+        <ons-button onclick="type(7)" > 7 </ons-button> 
+        <ons-button onclick="type(8)"> 8 </ons-button> 
+        <ons-button onclick="type(9)"> 9 </ons-button>       
+        <ons-button onclick="multiply()" class="actionButton"> × </ons-button>     
+      </ons-row>
+      <ons-row style=" height: 20%">
+        <ons-button  onclick="type(4)"> 4 </ons-button> 
+        <ons-button  onclick="type(5)"> 5 </ons-button> 
+        <ons-button  onclick="type(6)"> 6 </ons-button>       
+        <ons-button   onclick="minus()" class="actionButton"> - </ons-button>     
+      </ons-row>
+      <ons-row style=" height: 20%">
+        <ons-button  onclick="type(1)"> 1 </ons-button> 
+        <ons-button  onclick="type(2)"> 2 </ons-button> 
+        <ons-button  onclick="type(3)"> 3 </ons-button>       
+        <ons-button  onclick="plus()" class="actionButton"> + </ons-button>     
+      </ons-row>
+      <ons-row style=" height: 20%">
+        <ons-button onclick="type(0)" style="flex: 1 1 calc(75% - 4px);" > 0 </ons-button> 
+        <ons-button onclick="equal()" class="actionButton"> = </ons-button>     
+      </ons-row>
+    </ons-row>
+  </ons-page>
+```
+
+For the css we do simple flexbox with percentages:
+
+```
+.button {
+      display: flex;
+      flex: 1 1 calc(25% - 4px);
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin: 2px;
+      opacity: 0.7;
+    }
+    ons-row {
+      background: rgba(180, 206, 232, 0.3);
+    }
+    .actionButton {
+      opacity: 1;
+    }
+    .screen {
+      font-size: 40px;
+      display: flex; 
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+    }
+```
+
+
+Javascript code
+
+```
+function calculator(state, action) {
+  console.log('before');
+  console.log(state);
+  var ret = lastAction(help(state, action), action);
+  console.log('after');
+  return ret;
+}
+```
+var store = Redux.createStore(calculator)
+function render() {
+  var el = document.getElementById('screen');
+  el.innerHTML = store.getState().number
+}
+
+store.subscribe(render)
+ons.ready(render);
+```
+
+```
+var changeSign = () =>   store.dispatch({type: 'CHANGE_SIGN'})
+var clean = () => store.dispatch({type:'CLEAN'})
+var divide = () => store.dispatch({type: 'OPERATION', func: (a, b) => Math.floor(a / b) });
+var equal = () => store.dispatch({type: 'EQUAL', func: (a, b) => b});
+var minus = () => store.dispatch({type: 'OPERATION', func: (a, b) => a - b});
+var mod = () => store.dispatch({type: 'OPERATION', func: (a, b) => a % b });
+var multiply = () => store.dispatch({type: 'OPERATION', func: (a, b) => a * b});
+var plus = () => store.dispatch({type: 'OPERATION', func: (a, b) => a + b});
+var type = (number) => store.dispatch({type: 'TYPE', number});
+```
+
+
+https://egghead.io/lessons/javascript-redux-the-single-immutable-state-tree
+https://github.com/reactjs/redux
+
+

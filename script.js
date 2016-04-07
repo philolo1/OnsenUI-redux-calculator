@@ -38,6 +38,26 @@ function handleOperation(state, action) {
   };
 }
 
+function handleEqual(state, action) {
+  if (state.lastAction !== 'EQUAL') {
+    var myFun =  (a) => {
+      return state.operation(a, state.number);
+    }
+
+    return {
+      ...state,
+      storedFunc: myFun,
+      number: state.storedFunc(state.number)
+    };
+  } else {
+    return {
+      ...state,
+      number: state.storedFunc(state.number)
+    };
+
+  }
+}
+
 
 function help(state, action) {
 
@@ -71,34 +91,16 @@ function help(state, action) {
     case "OPERATION":
       return handleOperation(state, action);
     case "EQUAL":
-      if (state.lastAction !== 'EQUAL') {
-        var myFun =  (a) => {
-          return state.operation(a, state.number);
-        }
-
-        return {
-          ...state,
-          storedFunc: myFun,
-          number: state.storedFunc(state.number)
-        };
-      } else {
-         return {
-          ...state,
-          number: state.storedFunc(state.number)
-        };
-
-      }
-
+      return handleEqual(state, action);
+      
           default:
       return state
   }
 }
 function calculator(state, action) {
-  console.log('before');
   console.log(state);
-  var ret = lastAction(help(state, action), action);
+  var ret = Redux.combineReducers(lastAction, help);
   console.log('after');
-  console.log(ret);
   return ret;
 }
 
@@ -112,19 +114,12 @@ store.subscribe(render)
 ons.ready(render);
 
 
-var type = function(number) {
-  store.dispatch({type: 'TYPE', number});
-}
-
-var clean = function(number) {
-  store.dispatch({type:'CLEAN'});
-}
-
 var changeSign = () =>   store.dispatch({type: 'CHANGE_SIGN'})
-var mod = () => store.dispatch({type: 'OPERATION', func: mod_func });
-var divide = () => store.dispatch({type: 'OPERATION', func: div_func});
-var plus = () => store.dispatch({type: 'OPERATION', func: plus_func});
-var minus = () => store.dispatch({type: 'OPERATION', func: minus_func});
-var multiply = () => store.dispatch({type: 'OPERATION', func: mult_func});
+var clean = () => store.dispatch({type:'CLEAN'})
+var divide = () => store.dispatch({type: 'OPERATION', func: (a, b) => Math.floor(a / b) });
 var equal = () => store.dispatch({type: 'EQUAL', func: (a, b) => b});
-
+var minus = () => store.dispatch({type: 'OPERATION', func: (a, b) => a - b});
+var mod = () => store.dispatch({type: 'OPERATION', func: (a, b) => a % b });
+var multiply = () => store.dispatch({type: 'OPERATION', func: (a, b) => a * b});
+var plus = () => store.dispatch({type: 'OPERATION', func: (a, b) => a + b});
+var type = (number) => store.dispatch({type: 'TYPE', number});
