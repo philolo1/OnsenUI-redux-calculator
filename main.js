@@ -18,50 +18,99 @@ var minus_func = function minus_func(a, b) {
   return a - b;
 };
 
+function lastAction(state, action) {
+  return _extends({}, state, { lastAction: action.type });
+}
+
+function handleOperation(state, action) {
+  if (state.lastAction == 'EQUAL') {
+    var myFun = function myFun(a) {
+      return action.func(state.originalFunc(state.number), a);
+    };
+    return _extends({}, state, {
+      operation: action.func,
+      storedFunc: myFun,
+      number: state.number
+    });
+  } else if (state.lastAction == 'OPERATION') {
+    var myFun = function myFun(a) {
+      return action.func(state.number, a);
+    };
+    return _extends({}, state, {
+      operation: action.func,
+      storedFunc: myFun,
+      number: state.number
+    });
+  }
+  var myFun = function myFun(a) {
+    return action.func(state.storedFunc(state.number), a);
+  };
+  return _extends({}, state, {
+    operation: action.func,
+    originalFunc: state.storedFunc,
+    storedFunc: myFun,
+    number: state.storedFunc(state.number)
+  });
+}
+
 function help(state, action) {
+
   var initialState = {
-    storedNumber: 0,
-    storedAction: function storedAction(a, b) {
-      return b;
-    },
-    currentNumber: 0,
-    swapNext: false
+    number: 0,
+    storedFunc: function storedFunc(x) {
+      return x;
+    }
   };
 
   if (typeof state === 'undefined') {
     return initialState;
   }
 
-  var newState = state;
-
   switch (action.type) {
-    case 'TYPE':
-      if (state.swapNext) {
-        newState.storedNumber = state.currentNumber;
-        newState.currentNumber = 0;
-        newState.swapNext = false;
+    case "TYPE":
+      var number = state.number;
+      if (state.lastAction !== 'TYPE') {
+        number = 0;
       }
-      return _extends({}, newState, { currentNumber: newState.currentNumber * 10 + action.number });
-    case 'CHANGE_SIGN':
-      return _extends({}, newState, { currentNumber: -newState.currentNumber });
+      return _extends({}, state, { number: 10 * number + action.number });
     case 'CLEAN':
       return initialState;
-    case 'OPERATION':
-      return _extends({}, newState, { storedAction: action.func,
-        storedNumber: newState.currentNumber,
-        currentNumber: newState.storedAction(newState.storedNumber, newState.currentNumber), swapNext: true });
-    case 'EQUAL':
-      return _extends({}, newState, { storedAction: action.func, currentNumber: newState.storedAction(newState.storedNumber, newState.currentNumber), swapNext: true });
+    case 'CHANGE_SIGN':
+      if (state.lastAction === 'OPERATION') {
+        return _extends({}, state, { number: 0 });
+      } else if (state.lastAction === 'EQUAL') {
+        return _extends({}, state, { number: -state.number, storedFunc: function storedFunc(x) {
+            return x;
+          } });
+      }
+
+      return _extends({}, state, { number: -state.number });
+    case "OPERATION":
+      return handleOperation(state, action);
+    case "EQUAL":
+      if (state.lastAction !== 'EQUAL') {
+        var myFun = function myFun(a) {
+          return state.operation(a, state.number);
+        };
+
+        return _extends({}, state, {
+          storedFunc: myFun,
+          number: state.storedFunc(state.number)
+        });
+      } else {
+        return _extends({}, state, {
+          number: state.storedFunc(state.number)
+        });
+      }
+
     default:
       return state;
   }
-
-  return newState;
 }
 function calculator(state, action) {
   console.log('before');
   console.log(state);
-  var ret = help(state, action);
+  var ret = lastAction(help(state, action), action);
   console.log('after');
   console.log(ret);
   return ret;
@@ -70,7 +119,7 @@ function calculator(state, action) {
 var store = Redux.createStore(calculator);
 function render() {
   var el = document.getElementById('screen');
-  el.innerHTML = store.getState().currentNumber;
+  el.innerHTML = store.getState().number;
 }
 
 store.subscribe(render);

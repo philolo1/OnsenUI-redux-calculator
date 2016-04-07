@@ -1,0 +1,3 @@
+There are many frameworks and concepts around in the Javascript world. In todays blogpost we are going to write a pure mobile Javascript application with OnsenUI and  `Redux`, which is a very powerful but small library that enables to write Javascript applications in a conceptual different way.
+
+Redux is inspired by Flux (https://facebook.github.io/flux/), whcih was developed by Facebook. 

@@ -4,48 +4,99 @@ var mult_func = (a, b) => a * b;
 var plus_func = (a, b) => a + b;
 var minus_func = (a, b) => a - b;
 
-function help(state, action) {
-  const initialState = {
-    storedNumber: 0, 
-    storedAction: (a, b) => b, 
-    currentNumber: 0, 
-    swapNext: false
-  };
 
+function lastAction(state, action) {
+  return {...state, lastAction: action.type};
+}
+
+function handleOperation(state, action) {
+  if ( state.lastAction == 'EQUAL') {
+    var myFun =  (a) => action.func(state.originalFunc(state.number), a);
+    return {
+      ...state,
+      operation: action.func, 
+      storedFunc: myFun,
+      number: state.number
+    };
+  }  else if (state.lastAction == 'OPERATION') {
+    var myFun =  (a) => action.func(state.number, a);
+    return {
+      ...state,
+      operation: action.func, 
+      storedFunc: myFun,
+      number: state.number
+    };
+
+  }
+  var myFun =  (a) => action.func(state.storedFunc(state.number), a);
+  return {
+    ...state,
+    operation: action.func, 
+    originalFunc: state.storedFunc,
+    storedFunc: myFun,
+    number: state.storedFunc(state.number)
+  };
+}
+
+
+function help(state, action) {
+
+  
+  const initialState = {
+    number: 0,
+    storedFunc: (x) => x,
+  };
+  
   if (typeof state === 'undefined') {
     return initialState;
   }
-
-  let newState = state;
   
   switch (action.type) {
-    case 'TYPE':
-    if (state.swapNext) {
-      newState.storedNumber = state.currentNumber;
-      newState.currentNumber = 0;
-      newState.swapNext = false;
-    }
-    return {...newState,  currentNumber: newState.currentNumber * 10 + action.number}
+    case "TYPE":
+      var number = state.number;
+      if (state.lastAction !== 'TYPE') {
+        number = 0;
+      }
+      return {...state, number: 10 * number + action.number};
+    case 'CLEAN':
+      return initialState; 
     case 'CHANGE_SIGN':
-      return {...newState, currentNumber: -newState.currentNumber}
-    case 'CLEAN': 
-      return initialState
-    case 'OPERATION':
-      return {...newState, storedAction: action.func,
-        storedNumber: newState.currentNumber, 
-        currentNumber: newState.storedAction(newState.storedNumber, newState.currentNumber), swapNext: true}
-    case 'EQUAL':
-      return {...newState, storedAction: action.func, currentNumber: newState.storedAction(newState.storedNumber, newState.currentNumber), swapNext: true}
-    default:
+      if (state.lastAction === 'OPERATION' ) {
+        return {...state, number: 0}
+      } else if (state.lastAction === 'EQUAL') {
+        return {...state, number: -state.number, storedFunc: (x) => x}
+      }
+
+      return {...state, number: -state.number}
+    case "OPERATION":
+      return handleOperation(state, action);
+    case "EQUAL":
+      if (state.lastAction !== 'EQUAL') {
+        var myFun =  (a) => {
+          return state.operation(a, state.number);
+        }
+
+        return {
+          ...state,
+          storedFunc: myFun,
+          number: state.storedFunc(state.number)
+        };
+      } else {
+         return {
+          ...state,
+          number: state.storedFunc(state.number)
+        };
+
+      }
+
+          default:
       return state
   }
-
-  return newState;
 }
 function calculator(state, action) {
   console.log('before');
   console.log(state);
-  var ret = help(state, action);
+  var ret = lastAction(help(state, action), action);
   console.log('after');
   console.log(ret);
   return ret;
@@ -54,7 +105,7 @@ function calculator(state, action) {
 var store = Redux.createStore(calculator)
 function render() {
   var el = document.getElementById('screen');
-  el.innerHTML = store.getState().currentNumber    
+  el.innerHTML = store.getState().number
 }
 
 store.subscribe(render)
