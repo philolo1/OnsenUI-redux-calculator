@@ -29,26 +29,12 @@ function handleLoadedPure: (state, action) {
 }
 ```
 
-As one can see, one needs to be careful to write pure functions and don't manipulate the paramaters. If the function would be  not pure, it would be hard to recover to previous state and would make debuggin a pain. 
-
-
-EXPLAIN redux https://github.com/reactjs/redux/blob/master/examples/counter-vanilla/index.html
-
-
-store = Redux.createStore(counter)
-var valueEl = document.getElementById('value')
-function render() {
-  valueEl.innerHTML = store.getState().toString()
-}
-render()
-store.subscribe(render)
+As one can see, one needs to be careful to write pure functions and don't manipulate the paramaters. If the function would be  not pure, it would be hard to recover to previous state and would make debugging.
 
 
 CALCULATOR
 
-Let us first look at our html/css structure. The caluclator consists of 6 rows: The first one will be a simple div that contains the screen and the rest of the buttons are consistens of buttons for inputing numbers and actions. 
-
-
+Let us first look at our html/css structure. The caluclator consists of 6 rows: The first one will be a simple div that contains the screen and the rest of the buttons are consistens of buttons for inputing numbers and actions. For simplicity we will ony support integer manipulation.  We use the power of ons-button and ons-page:
 
 
 HTML JUST BUTTONS
@@ -91,7 +77,7 @@ HTML JUST BUTTONS
   </ons-page>
 ```
 
-For the css we do simple flexbox with percentages:
+There is now real magic going on here. Every row is split equally accross the screen and every column has equal height using flexbox and percentages. The colors of the buttons are done by different colors:
 
 ```
 .button {
@@ -121,26 +107,18 @@ For the css we do simple flexbox with percentages:
 
 Javascript code
 
-```
-function calculator(state, action) {
-  console.log('before');
-  console.log(state);
-  var ret = lastAction(help(state, action), action);
-  console.log('after');
-  return ret;
-}
-```
-var store = Redux.createStore(calculator)
-function render() {
-  var el = document.getElementById('screen');
-  el.innerHTML = store.getState().number
-}
+To write the the Javascript code we need to first think about the state of our application and the actions.  For the actions we use:
+* 'TYPE' : this action will mean that we type a number to our screen
+* 'CHANGE_SIGN' : This means that we change the number of the screen.
+* 'CLEAN' : This will clean the screen
+* 'EQUAL' : Show us the result (EQUAL sign)
+* 'OPERATION' : This action will be called whenever we press an action button that will do a mathematic operation with two OPERATORS.
 
-store.subscribe(render)
-ons.ready(render);
-```
+
+We can now already write some part of our javascript code:
 
 ```
+// all Actions
 var changeSign = () =>   store.dispatch({type: 'CHANGE_SIGN'})
 var clean = () => store.dispatch({type:'CLEAN'})
 var divide = () => store.dispatch({type: 'OPERATION', func: (a, b) => Math.floor(a / b) });
@@ -150,10 +128,162 @@ var mod = () => store.dispatch({type: 'OPERATION', func: (a, b) => a % b });
 var multiply = () => store.dispatch({type: 'OPERATION', func: (a, b) => a * b});
 var plus = () => store.dispatch({type: 'OPERATION', func: (a, b) => a + b});
 var type = (number) => store.dispatch({type: 'TYPE', number});
+
+// call store with our reducer
+var store = Redux.createStore(calculator)
+
+function render() {
+  var el = document.getElementById('screen');
+  el.innerHTML = store.getState().number
+}
+
+store.subscribe(render)
+ons.ready(render);
+
 ```
 
+The Redux Framework manages the store. We will need to give it our reducer with `Redux.createStore(ourReducer)`, which we will define later. Since we want to rerender everytime the state changes, we need to listen to the store. Fortunatly Redux provides us with a function `store.subscribe`, which we are given our render function. 
 
+The hard complicated part is writing the reducer. Our reducer will have four states: 
+
+* number: the number being displayed 
+* operation: This will store the last function that has been like plus, minus etc.
+* storedFunc: This function will be used to store results and operations, that are not direcly diplayed. For example, if we type `1 +`, the value of the storedFunc will be `(x) => 1 +x`. This makes evaluation quite easy, since we have to only call `storedFunc(num)`.
+* originalFunc: This function is necessary to support repeating the last operation for the '=' sign.
+* lastAction: This will include our lastType
+
+
+
+Now that we have the state and operations, we only need to write the reducer. We will split our reducer into two, one for adding the lastAction and the other one doing the main state transformation. 
+
+```
+function lastAction(state, action) {
+  return {...state, lastAction: action.type};
+}
+
+function calculator(state, action) {
+  console.log('before');
+  console.log(state);
+  var ret = lastAction(help(state, action), action);
+  console.log('after');
+  return ret;
+}
+
+```
+
+Now that we have defined this function, we are writing our gerneral reducer that handles all the actions, but 'EQUAL' and 'OPERATION', whcih should be strayedforward:
+
+```
+function help(state, action) {
+
+  
+  const initialState = {
+    number: 0,
+    storedFunc: (x) => x,
+  };
+  
+  if (typeof state === 'undefined') {
+    return initialState;
+  }
+  
+  switch (action.type) {
+    case "TYPE":
+      var number = state.number;
+      if (state.lastAction !== 'TYPE') {
+        number = 0;
+      }
+      return {...state, number: 10 * number + action.number};
+    case 'CLEAN':
+      return initialState; 
+    case 'CHANGE_SIGN':
+      if (state.lastAction === 'OPERATION' ) {
+        return {...state, number: 0}
+      } else if (state.lastAction === 'EQUAL') {
+        return {...state, number: -state.number, storedFunc: (x) => x}
+      }
+
+      return {...state, number: -state.number}
+    case "OPERATION":
+      return handleOperation(state, action);
+    case "EQUAL":
+      return handleEqual(state, action);
+      
+          default:
+      return state
+  }
+}
+```
+
+the 
+
+
+```
+function handleEqual(state, action) {
+  if (state.lastAction !== 'EQUAL') {
+    var myFun =  (a) => {
+      return state.operation(a, state.number);
+    }
+
+    return {
+      ...state,
+      storedFunc: myFun,
+      number: state.storedFunc(state.number)
+    };
+  } else {
+    return {
+      ...state,
+      number: state.storedFunc(state.number)
+    };
+
+  }
+}
+```
+
+and now 
+
+
+
+
+
+```
+function handleOperation(state, action) {
+  if ( state.lastAction == 'EQUAL') {
+    var myFun =  (a) => action.func(state.originalFunc(state.number), a);
+    return {
+      ...state,
+      operation: action.func, 
+      storedFunc: myFun,
+      number: state.number
+    };
+  }  else if (state.lastAction == 'OPERATION') {
+    var myFun =  (a) => action.func(state.number, a);
+    return {
+      ...state,
+      operation: action.func, 
+      storedFunc: myFun,
+      number: state.number
+    };
+
+  }
+  var myFun =  (a) => action.func(state.storedFunc(state.number), a);
+  return {
+    ...state,
+    operation: action.func, 
+    originalFunc: state.storedFunc,
+    storedFunc: myFun,
+    number: state.storedFunc(state.number)
+  };
+}
+```
+
+And now we are done and have our app. It might take a while to get used to tis code thinking, we could give you a small glance at the word of redux and functional programming.
+
+
+
+
+** Resources
+
+We only covered a small app that shows how to develop in Redux. There are tons of resources on the internet. I truly can recommend the video tutorial:
 https://egghead.io/lessons/javascript-redux-the-single-immutable-state-tree
-https://github.com/reactjs/redux
-
+and having a look at https://github.com/reactjs/redux. If any questions arise, feel free to ask a question in our community(https://community.onsen.io/).
 
