@@ -1,4 +1,4 @@
-/*! onsenui - v2.0.0-beta.7 - 2016-03-25 */
+/*! onsenui - v2.0.0-beta.7 - 2016-03-14 */
 /*
 Copyright 2013-2015 ASIAL CORPORATION
 
@@ -51,32 +51,12 @@ ons-fab {
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
 }
 
+::-webkit-scrollbar {
+  display: none;
+}
+
 input, textarea {
   -webkit-user-select: auto;
-}
-
-ons-toolbar:not([inline]) {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  z-index: 10000;
-}
-
-ons-bottom-toolbar:not([inline]) {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.scroller {
-  display: block;
-  height: 100%;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  -ms-overflow-style: none;
-  -ms-scroll-snap-type: mandatory;
 }
 
 .page,
@@ -129,14 +109,18 @@ ons-toolbar + .page__background + .page__content {
 }
 
 .page__content {
-  overflow: auto;
+  overflow: scroll;
   -webkit-overflow-scrolling: touch;
   z-index: 0;
   -ms-touch-action: pan-y;
 }
 
-.page-with-bottom-toolbar > .page__content {
+.page__bottom-bar-fill ~ .page__content {
   bottom: 44px;
+}
+
+.page__content::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-bar__status-bar-fill + .tab-bar--top__content {
@@ -277,13 +261,9 @@ ons-carousel[disabled] {
 
 ons-row {
   display: -webkit-box;
-  display: -webkit-flex;
   display: -moz-flex;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-flex-wrap: wrap;
-      -ms-flex-wrap: wrap;
-          flex-wrap: wrap;
+  flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
 }
@@ -291,28 +271,25 @@ ons-row {
 ons-row[vertical-align="top"], ons-row[align="top"] {
   -webkit-box-align: start;
   box-align: start;
-  -ms-flex-align: start;
-  -webkit-align-items: flex-start;
   -moz-align-items: flex-start;
-  align-items: flex-start;
+  -ms-grid-row-align: flex-start;
+      align-items: flex-start;
 }
 
 ons-row[vertical-align="bottom"], ons-row[align="bottom"] {
   -webkit-box-align: end;
   box-align: end;
-  -ms-flex-align: end;
-  -webkit-align-items: flex-end;
   -moz-align-items: flex-end;
-  align-items: flex-end;
+  -ms-grid-row-align: flex-end;
+      align-items: flex-end;
 }
 
 ons-row[vertical-align="center"], ons-row[align="center"] {
   -webkit-box-align: center;
   box-align: center;
-  -ms-flex-align: center;
-  -webkit-align-items: center;
   -moz-align-items: center;
-  align-items: center;
+  -ms-grid-row-align: center;
+      align-items: center;
   text-align: inherit;
 }
 
@@ -322,9 +299,7 @@ ons-row + ons-row {
 
 ons-col {
   -webkit-box-flex: 1;
-  -webkit-flex: 1;
   -moz-flex: 1;
-  -ms-flex: 1;
   flex: 1;
   display: block;
   width: 100%;
@@ -332,14 +307,10 @@ ons-col {
 }
 
 ons-col[vertical-align="top"], ons-col[align="top"] {
-  -webkit-align-self: flex-start;
-  -ms-flex-item-align: start;
   align-self: flex-start;
 }
 
 ons-col[vertical-align="bottom"], ons-col[align="bottom"] {
-  -webkit-align-self: flex-end;
-  -ms-flex-item-align: end;
   align-self: flex-end; }
 
 ons-col[vertical-align="center"], ons-col[align="center"] {
@@ -407,32 +378,27 @@ ons-icon[spin="true"] {
 
 .ons-icon[rotate="90"] {
   -webkit-transform: rotate(90deg);
-  -ms-transform: rotate(90deg);
-      transform: rotate(90deg);
+  transform: rotate(90deg);
 }
 
 .ons-icon[rotate="180"] {
   -webkit-transform: rotate(180deg);
-  -ms-transform: rotate(180deg);
-      transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
 .ons-icon[rotate="270"] {
   -webkit-transform: rotate(270deg);
-  -ms-transform: rotate(270deg);
-      transform: rotate(270deg);
+  transform: rotate(270deg);
 }
 
 ons-icon[flip="horizontal"] {
   -webkit-transform: scale(-1, 1);
-  -ms-transform: scale(-1, 1);
-      transform: scale(-1, 1);
+  transform: scale(-1, 1);
 }
 
 ons-icon[flip="vertical"] {
   -webkit-transform: scale(1, -1);
-  -ms-transform: scale(1, -1);
-      transform: scale(1, -1);
+  transform: scale(1, -1);
 }
 
 ons-icon[fixed-width="true"] {
@@ -487,14 +453,15 @@ ons-input .text-input__label:not(.text-input--material__label) {
 }
 
 ons-input .text-input__label--active {
-  -ms-transform: translate(0, -75%) scale(0.75);
-      transform: translate(0, -75%) scale(0.75);
-  -webkit-transform: translate(0, -75%) scale(0.75);
-  -ms-transform-origin: left top;
-      transform-origin: left top;
+  transform: translate3d(0, -75%, 0) scale(0.75);
+  -webkit-transform: translate3d(0, -75%, 0) scale(0.75);
+  transform-origin: left top;
   -webkit-transform-origin: left top;
+  -webkit-transition: color 0.1s ease-in, -webkit-transform 0.1s ease-in;
+  transition: color 0.1s ease-in, -webkit-transform 0.1s ease-in;
   transition: transform 0.1s ease-in, color 0.1s ease-in;
-  -webkit-transition: -webkit-transform 0.1s ease-in, color 0.1s ease-in;
+  transition: transform 0.1s ease-in, color 0.1s ease-in, -webkit-transform 0.1s ease-in;
+  -webkit-transition: transform 0.1s ease-in, color 0.1s ease-in;
 }
 
 ons-input:not([float]) .text-input__label--active {
@@ -624,11 +591,6 @@ ons-list-item .ripple__wave, ons-list-item .ripple__background,
   top: -10px;
 }
 
-.page__content > ons-scrollbar .scrollbar-touch {
-  top: -15px;
-  right: -5px;
-}
-
 .scrollbar-container {
   position: absolute;
   right: 5px;
@@ -638,14 +600,6 @@ ons-list-item .ripple__wave, ons-list-item .ripple__background,
   pointer-events: none;
   /*width: 30px;*/
   /*background:rgba(0,0,0,0.05);*/
-}
-
-.scrollbar-content:not(.scrollbar-native)::-webkit-scrollbar {
-  display: none;
-}
-
-ons-scrollbar[native] {
-  display: none;
 }
 
 .scrollbar-container[draggable] {
@@ -668,7 +622,7 @@ ons-scrollbar[native] {
 .scrollbar-container[autohide] .scrollbar{
   opacity: 0;
   -webkit-transition: opacity 0.3s ease-in-out;
-          transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
 }
 
 .scrollbar-autohide-visible[autohide] .scrollbar,
@@ -681,6 +635,41 @@ ons-scrollbar[native] {
   box-shadow: 0 0 2px 1px darkgray;
 }
 
+
+/*
+Copyright 2013-2015 ASIAL CORPORATION
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
+
+ons-scroller {
+  display: block;
+  height: 100%;
+  overflow: scroll;
+  -webkit-overflow-scrolling: touch;   
+  -ms-overflow-style: none;
+  -ms-scroll-snap-type: mandatory;
+}
+
+ons-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.ons-scroller__content {
+  height: 100%;
+  overflow: scroll;
+}
 
 /*
 Copyright 2013-2015 ASIAL CORPORATION
